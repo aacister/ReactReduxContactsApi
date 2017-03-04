@@ -14,7 +14,7 @@ mongoose.connect('mongodb://localhost/ReactContactsDb', function(error){
     console.log('Mongoose state: ' + mongoose.connection.readyState);
   });
 */
-mongodb://<dbuser>:<dbpassword>@ds113660.mlab.com:13660/heroku_hx4s2ktr
+
 mongoose.connect('mongodb://aacister:password123@ds113660.mlab.com:13660/heroku_hx4s2ktr', function(error){
     console.log('Mongoose state: ' + mongoose.connection.readyState);
   });
