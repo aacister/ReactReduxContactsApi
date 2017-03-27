@@ -18,6 +18,7 @@ mongoose.connect('mongodb://localhost/ReactContactsDb', function(error){
 mongoose.connect('mongodb://aacister:password123@ds113660.mlab.com:13660/heroku_hx4s2ktr', function(error){
     console.log('Mongoose state: ' + mongoose.connection.readyState);
   });
+
 var app = express();
 
 
@@ -54,6 +55,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 require('./models/Contacts');
+require('./models/Hobbies');
 var routes = require('./routes/routes');
 app.use('/', routes);
 

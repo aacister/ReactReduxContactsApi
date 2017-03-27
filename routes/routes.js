@@ -2,7 +2,9 @@ var express = require('express');
 var router = express.Router();
 var cors = require('cors');
 var mongoose = require('mongoose');
+var deepPopulate = require('mongoose-deep-populate')(mongoose);
 var Contact = mongoose.model('Contact');
+var Hobby = mongoose.model('Hobby');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -27,13 +29,23 @@ router.param('contact', function(req, res, next, id){
 
 //Get all contacts
 router.get('/api/contacts/', (req, res, next) => {
-  Contact.find(function(err, contacts){
-  	if(err){
-		return next(err);
-	}
-	res.json(contacts);
+
+  Contact.find().deepPopulate(['hobbies']).exec(function(err, contacts){
+      if(err){
+        return next(err);
+      }
+      res.json(contacts);
+    })
 });
 
+//Get all hobbies
+router.get('/api/hobbies',  (req, res, next) => {
+  Hobby.find().exec(function(err, hobbies){
+    if(err){
+      return next(err);
+    }
+    res.json(hobbies);
+  });
 });
 
 //Get contact by id
@@ -55,15 +67,19 @@ router.post('/api/contacts/', (req, res, next) =>{
 	contact.last_name = req.body.contact.last_name;
 	contact.email = req.body.contact.email;
 
-	contact.save(function(err, contact){
-		if(err){
-			return next(err);
-		}
+  let hobbies = [];
 
-   var cObj= {_id: contact._id, first_name: contact.first_name, last_name: contact.last_name, email: contact.email};
-   res.json(cObj);
+    req.body.contact.hobbies.forEach(hobby => {
+      hobbies.push(Hobby.findById(hobby._id));
+  });
 
-	}).catch(next);
+Promise.all(hobbies).then((hobbies) => {
+  contact.hobbies = hobbies;
+  return contact.save().then(() =>{
+    return res.json(contact);
+  })
+});
+
 });
 
 
@@ -82,14 +98,33 @@ router.put('/api/contacts/:contact', (req, res, next)=>{
 	if(typeof req.body.contact.email !== 'undefined'){
 		contact.email = req.body.contact.email;
 	}
+      let hobbies = [];
 
-	return contact.save().then(function(){
-		return res.json(contact);
-	});
+        req.body.contact.hobbies.forEach(hobby => {
+          hobbies.push(Hobby.findById(hobby._id));
+      });
+
+    Promise.all(hobbies).then((hobbies) => {
+      contact.hobbies = hobbies;
+      return contact.save().then(function(){
+        return res.json(contact);
+      });
+    });
+
      }).catch(next);
 });
 
-
+function fillContactHobbies(contact, hobbies){
+  return new Promise(resolve => {
+  let contactHobbies = [];
+  hobbies.map(hobby => {
+    Hobby.findById(hobby._id).then(function(h){
+      contactHobbies.push(h);
+  });
+});
+  resolve(contactHobbies);
+});
+}
 
 router.delete('/api/contacts/:contact', (req, res, next)=>{
 	Contact.findById(req.body.id).then(function(){
